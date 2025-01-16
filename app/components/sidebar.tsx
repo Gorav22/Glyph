@@ -10,7 +10,7 @@ interface SidebarProps {
 
 export function Sidebar({ tabs, activeTab, onTabChange, onAddTab }: SidebarProps) {
   return (
-    <div className="w-16 bg-gray-900 text-white flex flex-col items-center py-4">
+    <div className="w-16 h-[100%] bg-gray-900 text-white flex flex-col items-center py-4">
       {tabs.map((tab) => (
         <button
           key={tab._id}

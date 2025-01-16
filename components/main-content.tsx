@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react'
 import { Tab } from '../types'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FrameContent } from './frame-content'
 
 interface MainContentProps {
   activeTab: Tab
@@ -126,13 +127,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
           {aiResult}
         </div>
       ) : (
-        <iframe
-          src={url}
-          title={activeTab.title}
-          className="w-full h-full border-none"
-          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-          referrerPolicy="no-referrer"
-        />
+        <FrameContent url={url} title={activeTab.title} />
       )}
     </div>
   )

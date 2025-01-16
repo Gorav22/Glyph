@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'API key or Custom Search Engine ID is missing' }, { status: 500 })
   }
 
-  const url = `https://www.googleapis.com/customsearch/v1?key=AIzaSyBcWi0K0iATlG6n94CsDLKtmRovdOclcrM&cx=${cx}&q=${encodeURIComponent(query)}`
+  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}`
 
   try {
     const response = await fetch(url)

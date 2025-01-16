@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-// import showdown from 'showdown'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

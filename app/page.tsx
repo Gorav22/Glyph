@@ -3,16 +3,13 @@
 import { useState } from 'react'
 import { Sidebar } from './components/sidebar'
 import { MainContent } from '../components/main-content'
-import { SearchResults } from './components/search-results'
 import { Tab } from './types'
 
 export default function BrowserInterface() {
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: '1', title: 'New Tab', url: 'about:blank', splitView: false }
+    { id: '1', title: 'New Tab', url: 'about:blank', splitView: false, isAISearch: false }
   ])
   const [activeTabId, setActiveTabId] = useState('1')
-  const [showAISearch, setShowAISearch] = useState(false)
-  const [aiSearchQuery, setAISearchQuery] = useState('')
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || tabs[0]
 
@@ -21,7 +18,8 @@ export default function BrowserInterface() {
       id: Date.now().toString(),
       title: 'New Tab',
       url: 'about:blank',
-      splitView: false
+      splitView: false,
+      isAISearch: false
     }
     setTabs([...tabs, newTab])
     setActiveTabId(newTab.id)
@@ -41,7 +39,7 @@ export default function BrowserInterface() {
 
   const handleUrlChange = (url: string) => {
     setTabs(tabs.map(tab => 
-      tab.id === activeTabId ? { ...tab, url, title: url } : tab
+      tab.id === activeTabId ? { ...tab, url, title: url, isAISearch: false } : tab
     ))
   }
 
@@ -51,8 +49,15 @@ export default function BrowserInterface() {
   }
 
   const handleAISearch = (query: string) => {
-    setShowAISearch(true)
-    setAISearchQuery(query)
+    const newTab = {
+      id: Date.now().toString(),
+      title: `AI: ${query}`,
+      url: `/api/search/ai?q=${encodeURIComponent(query)}`,
+      splitView: false,
+      isAISearch: true
+    }
+    setTabs([...tabs, newTab])
+    setActiveTabId(newTab.id)
   }
 
   const toggleSplitView = () => {
@@ -77,12 +82,6 @@ export default function BrowserInterface() {
         onSearch={handleSearch}
         onAISearch={handleAISearch}
       />
-      {showAISearch && (
-        <SearchResults 
-          query={aiSearchQuery} 
-          onClose={() => setShowAISearch(false)} 
-        />
-      )}
     </div>
   )
 }

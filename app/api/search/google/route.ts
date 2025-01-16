@@ -19,14 +19,21 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error('Failed to fetch search results from Google API')
-    }
     const data = await response.json()
+    
+    if (response.status === 403) {
+      console.error('Google API authentication error:', data.error?.message || 'Unknown error')
+      return NextResponse.json({ error: 'Google API authentication failed. Please check your API key and settings.' }, { status: 403 })
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Google API responded with status: ${response.status}`)
+    }
+    
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error fetching Google search results:', error)
-    return NextResponse.json({ error: 'Failed to fetch search results' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch search results. Please try again later.' }, { status: 500 })
   }
 }
 

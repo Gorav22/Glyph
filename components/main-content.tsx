@@ -14,6 +14,7 @@ interface MainContentProps {
 export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: MainContentProps) {
   const [inputValue, setInputValue] = useState(activeTab.url)
   const [searchResults, setSearchResults] = useState<any>(null)
+  const [aiResult, setAiResult] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,8 +22,11 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
     setInputValue(activeTab.url)
     if (activeTab.url.startsWith('/api/search/google')) {
       fetchSearchResults(activeTab.url)
+    } else if (activeTab.url.startsWith('/api/search/ai')) {
+      fetchAIResults(activeTab.url)
     } else {
       setSearchResults(null)
+      setAiResult('')
     }
   }, [activeTab])
 
@@ -48,17 +52,42 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
     setError(null)
     try {
       const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error('Failed to fetch search results')
-      }
       const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
       setSearchResults(data)
     } catch (error) {
       console.error('Error fetching search results:', error)
-      setError('An error occurred while fetching search results. Please try again.')
+      setError(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchAIResults = async (url: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      setAiResult(data.result)
+    } catch (error) {
+      console.error('Error fetching AI results:', error)
+      setError('An error occurred while fetching AI results. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearchResultClick = (url: string) => {
+    onUrlChange(url)
   }
 
   const ContentView = ({ url }: { url: string }) => (
@@ -66,19 +95,35 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
       {loading ? (
         <div className="p-4">Loading...</div>
       ) : error ? (
-        <div className="p-4 text-red-500">{error}</div>
+        <div className="p-4 text-red-500">
+          <h2 className="text-2xl font-bold mb-4">Error</h2>
+          <p>{error}</p>
+          <p className="mt-4">Please check your internet connection and try again. If the problem persists, there might be an issue with the search service.</p>
+        </div>
       ) : searchResults ? (
         <div className="p-4">
           <h2 className="text-2xl font-bold mb-4">Search Results</h2>
           {searchResults.items?.map((item: any, index: number) => (
             <div key={index} className="mb-4">
-              <a href={item.link} className="text-blue-600 hover:underline text-lg">
+              <a 
+                href={item.link} 
+                className="text-blue-600 hover:underline text-lg"
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleSearchResultClick(item.link)
+                }}
+              >
                 {item.title}
               </a>
               <p className="text-sm text-green-700">{item.displayLink}</p>
               <p className="text-sm mt-1">{item.snippet}</p>
             </div>
           ))}
+        </div>
+      ) : aiResult ? (
+        <div className="p-4 prose max-w-none">
+          <h2 className="text-2xl font-bold mb-4">AI Search Results</h2>
+          {aiResult}
         </div>
       ) : (
         <iframe

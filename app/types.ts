@@ -3,5 +3,6 @@ export interface Tab {
   title: string
   url: string
   splitView: boolean
+  isAISearch: boolean
 }
 

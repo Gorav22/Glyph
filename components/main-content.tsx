@@ -10,17 +10,26 @@ interface MainContentProps {
   onUrlChange: (url: string) => void
   onSearch: (query: string) => void
   onAISearch: (query: string) => void
+  onReload: () => void
 }
 
-export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: MainContentProps) {
+export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onReload }: MainContentProps) {
   const [inputValue, setInputValue] = useState(activeTab.url)
   const [searchResults, setSearchResults] = useState<any>(null)
   const [aiResult, setAiResult] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [history, setHistory] = useState<string[]>([activeTab.url])
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
+    if (activeTab.url !== history[currentIndex]) {
+      const newHistory = [...history.slice(0, currentIndex + 1), activeTab.url]
+      setHistory(newHistory)
+      setCurrentIndex(newHistory.length - 1)
+    }
     setInputValue(activeTab.url)
+    
     if (activeTab.url.startsWith('/api/search/google')) {
       fetchSearchResults(activeTab.url)
     } else if (activeTab.url.startsWith('/api/search/ai')) {
@@ -29,7 +38,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
       setSearchResults(null)
       setAiResult('')
     }
-  }, [activeTab])
+  }, [activeTab.url])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
@@ -45,6 +54,22 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
       } else {
         onSearch(inputValue.trim())
       }
+    }
+  }
+
+  const handleGoBack = () => {
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1
+      setCurrentIndex(newIndex)
+      onUrlChange(history[newIndex])
+    }
+  }
+
+  const handleGoForward = () => {
+    if (currentIndex < history.length - 1) {
+      const newIndex = currentIndex + 1
+      setCurrentIndex(newIndex)
+      onUrlChange(history[newIndex])
     }
   }
 
@@ -136,13 +161,27 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch }: Ma
     <div className="flex-1 flex flex-col">
       <div className="h-12 bg-white border-b flex items-center px-4">
         <div className="flex space-x-2 mr-4">
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleGoBack}
+            disabled={currentIndex <= 0}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleGoForward}
+            disabled={currentIndex >= history.length - 1}
+          >
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onReload}
+          >
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>

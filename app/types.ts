@@ -4,5 +4,6 @@ export interface Tab {
   url: string
   splitView: boolean
   isAISearch: boolean
+  isShortcut?: boolean
 }
 

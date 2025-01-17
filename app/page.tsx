@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { Sidebar } from './components/sidebar'
 import { MainContent } from '../components/main-content'
+import { AuthForm } from '../components/auth-form'
 import { Tab } from './types'
 
 export default function BrowserInterface() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [tabs, setTabs] = useState<Tab[]>([
     { id: '1', title: 'New Tab', url: 'about:blank', splitView: false, isAISearch: false }
   ])
@@ -66,6 +68,35 @@ export default function BrowserInterface() {
     ))
   }
 
+  const handleAddShortcut = (title: string, url: string) => {
+    const newShortcut = {
+      id: Date.now().toString(),
+      title,
+      url,
+      splitView: false,
+      isAISearch: false,
+      isShortcut: true
+    }
+    setTabs([...tabs, newShortcut])
+  }
+
+  const handleRemoveShortcut = (id: string) => {
+    setTabs(tabs.filter(tab => tab.id !== id))
+  }
+
+  const handleReload = () => {
+    // Re-fetch the current URL
+    handleUrlChange(activeTab.url)
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <AuthForm onAuthenticated={() => setIsAuthenticated(true)} />
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar 
@@ -75,12 +106,15 @@ export default function BrowserInterface() {
         onCloseTab={handleCloseTab}
         onTabChange={handleTabChange}
         onToggleSplitView={toggleSplitView}
+        onAddShortcut={handleAddShortcut}
+        onRemoveShortcut={handleRemoveShortcut}
       />
       <MainContent 
         activeTab={activeTab}
         onUrlChange={handleUrlChange}
         onSearch={handleSearch}
         onAISearch={handleAISearch}
+        onReload={handleReload}
       />
     </div>
   )

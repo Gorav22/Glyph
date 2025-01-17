@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from './components/sidebar'
 import { MainContent } from '../components/main-content'
 import { AuthForm } from '../components/auth-form'
+import { AddShortcutDialog } from '../components/add-shortcut-dialog'
 import { Tab } from './types'
 
 export default function BrowserInterface() {
@@ -68,8 +69,15 @@ export default function BrowserInterface() {
     ))
   }
 
+  const handleReload = () => {
+    const updatedTabs = tabs.map(tab => 
+      tab.id === activeTabId ? { ...tab, url: tab.url } : tab
+    )
+    setTabs(updatedTabs)
+  }
+
   const handleAddShortcut = (title: string, url: string) => {
-    const newShortcut = {
+    const newShortcut: Tab = {
       id: Date.now().toString(),
       title,
       url,
@@ -81,12 +89,11 @@ export default function BrowserInterface() {
   }
 
   const handleRemoveShortcut = (id: string) => {
-    setTabs(tabs.filter(tab => tab.id !== id))
-  }
-
-  const handleReload = () => {
-    // Re-fetch the current URL
-    handleUrlChange(activeTab.url)
+    const newTabs = tabs.filter(tab => tab.id !== id)
+    setTabs(newTabs)
+    if (id === activeTabId && newTabs.length > 0) {
+      setActiveTabId(newTabs[newTabs.length - 1].id)
+    }
   }
 
   if (!isAuthenticated) {

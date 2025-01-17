@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, RotateCcw, RefreshCw } from 'lucide-react'
 import { Tab } from '../types'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
 
   useEffect(() => {
     if (activeTab.url !== history[currentIndex]) {
+      // Add new URL to history, removing any forward history
       const newHistory = [...history.slice(0, currentIndex + 1), activeTab.url]
       setHistory(newHistory)
       setCurrentIndex(newHistory.length - 1)
@@ -71,6 +72,11 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
       setCurrentIndex(newIndex)
       onUrlChange(history[newIndex])
     }
+  }
+
+  const handleRefresh = () => {
+    // Re-fetch current URL
+    onUrlChange(activeTab.url)
   }
 
   const fetchSearchResults = async (url: string) => {
@@ -182,7 +188,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
             size="icon"
             onClick={onReload}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
         <form onSubmit={handleInputSubmit} className="flex-1 flex">

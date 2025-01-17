@@ -4,6 +4,12 @@ export interface Tab {
   url: string
   splitView: boolean
   isAISearch: boolean
-  isShortcut?: boolean
+  isBookmarked: boolean
+}
+
+export interface Shortcut {
+  id: string
+  title: string
+  url: string
 }
 

@@ -134,7 +134,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
         </div>
       ) : searchResults ? (
         <div className="p-4">
-          <h2 className="text-2xl font-bold mb-4">Search Results</h2>
+          {/* <h2 className="text-2xl font-bold mb-4">Search Results</h2> */}
           {searchResults.items?.map((item: any, index: number) => (
             <div key={index} className="mb-4">
               <a 
@@ -147,7 +147,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
               >
                 {item.title}
               </a>
-              <p className="text-sm text-green-700">{item.displayLink}</p>
+              {/* <p className="text-sm text-green-700">{item.displayLink}</p> */}
               <p className="text-sm mt-1">{item.snippet}</p>
             </div>
           ))}

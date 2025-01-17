@@ -3,16 +3,14 @@
 import { useState } from 'react'
 import { Sidebar } from './components/sidebar'
 import { MainContent } from '../components/main-content'
-import { AuthForm } from '../components/auth-form'
-import { AddShortcutDialog } from '../components/add-shortcut-dialog'
-import { Tab } from './types'
+import { Tab, Shortcut } from './types'
 
 export default function BrowserInterface() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: '1', title: 'New Tab', url: 'about:blank', splitView: false, isAISearch: false }
+    { id: '1', title: 'New Tab', url: 'about:blank', splitView: false, isAISearch: false, isBookmarked: false }
   ])
   const [activeTabId, setActiveTabId] = useState('1')
+  const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || tabs[0]
 
@@ -22,7 +20,8 @@ export default function BrowserInterface() {
       title: 'New Tab',
       url: 'about:blank',
       splitView: false,
-      isAISearch: false
+      isAISearch: false,
+      isBookmarked: false
     }
     setTabs([...tabs, newTab])
     setActiveTabId(newTab.id)
@@ -57,7 +56,8 @@ export default function BrowserInterface() {
       title: `AI: ${query}`,
       url: `/api/search/ai?q=${encodeURIComponent(query)}`,
       splitView: false,
-      isAISearch: true
+      isAISearch: true,
+      isBookmarked: false
     }
     setTabs([...tabs, newTab])
     setActiveTabId(newTab.id)
@@ -69,39 +69,34 @@ export default function BrowserInterface() {
     ))
   }
 
-  const handleReload = () => {
-    const updatedTabs = tabs.map(tab => 
-      tab.id === activeTabId ? { ...tab, url: tab.url } : tab
+  const toggleBookmark = () => {
+    const updatedTabs = tabs.map(tab =>
+      tab.id === activeTabId ? { ...tab, isBookmarked: !tab.isBookmarked } : tab
     )
     setTabs(updatedTabs)
-  }
 
-  const handleAddShortcut = (title: string, url: string) => {
-    const newShortcut: Tab = {
-      id: Date.now().toString(),
-      title,
-      url,
-      splitView: false,
-      isAISearch: false,
-      isShortcut: true
-    }
-    setTabs([...tabs, newShortcut])
-  }
-
-  const handleRemoveShortcut = (id: string) => {
-    const newTabs = tabs.filter(tab => tab.id !== id)
-    setTabs(newTabs)
-    if (id === activeTabId && newTabs.length > 0) {
-      setActiveTabId(newTabs[newTabs.length - 1].id)
+    const activeTabUpdated = updatedTabs.find(tab => tab.id === activeTabId)!
+    if (activeTabUpdated.isBookmarked) {
+      setShortcuts([...shortcuts, { id: activeTabId, title: activeTabUpdated.title, url: activeTabUpdated.url }])
+    } else {
+      setShortcuts(shortcuts.filter(shortcut => shortcut.id !== activeTabId))
     }
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <AuthForm onAuthenticated={() => setIsAuthenticated(true)} />
-      </div>
-    )
+  const handleShortcutClick = (url: string) => {
+    handleUrlChange(url)
+  }
+
+  const handleRenameTab = (id: string, newTitle: string) => {
+    setTabs(tabs.map(tab =>
+      tab.id === id ? { ...tab, title: newTitle } : tab
+    ))
+    // Update shortcut if the renamed tab is bookmarked
+    if (tabs.find(tab => tab.id === id)?.isBookmarked) {
+      setShortcuts(shortcuts.map(shortcut =>
+        shortcut.id === id ? { ...shortcut, title: newTitle } : shortcut
+      ))
+    }
   }
 
   return (
@@ -109,19 +104,20 @@ export default function BrowserInterface() {
       <Sidebar 
         tabs={tabs}
         activeTabId={activeTabId}
+        shortcuts={shortcuts}
         onAddTab={handleAddTab}
         onCloseTab={handleCloseTab}
         onTabChange={handleTabChange}
         onToggleSplitView={toggleSplitView}
-        onAddShortcut={handleAddShortcut}
-        onRemoveShortcut={handleRemoveShortcut}
+        onShortcutClick={handleShortcutClick}
+        onRenameTab={handleRenameTab}
       />
       <MainContent 
         activeTab={activeTab}
         onUrlChange={handleUrlChange}
         onSearch={handleSearch}
         onAISearch={handleAISearch}
-        onReload={handleReload}
+        onToggleBookmark={toggleBookmark}
       />
     </div>
   )

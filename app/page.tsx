@@ -1,16 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from './components/sidebar'
 import { MainContent } from '../components/main-content'
+import { AuthPage } from '../components/auth-page'
 import { Tab, Shortcut } from './types'
 
 export default function BrowserInterface() {
+  const [userId, setUserId] = useState<string | null>(null)
   const [tabs, setTabs] = useState<Tab[]>([
     { id: '1', title: 'New Tab', url: 'about:blank', splitView: false, isAISearch: false, isBookmarked: false }
   ])
   const [activeTabId, setActiveTabId] = useState('1')
   const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check')
+        if (response.ok) {
+          const data = await response.json()
+          setUserId(data.userId)
+          // Fetch user's shortcuts
+          fetchShortcuts(data.userId)
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const fetchShortcuts = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/shortcuts?userId=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setShortcuts(data.shortcuts)
+      }
+    } catch (error) {
+      console.error('Error fetching shortcuts:', error)
+    }
+  }
+
+  const handleAuthenticated = (authenticatedUserId: string) => {
+    setUserId(authenticatedUserId)
+    fetchShortcuts(authenticatedUserId)
+  }
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || tabs[0]
 
@@ -80,7 +117,7 @@ export default function BrowserInterface() {
     }))
   }
 
-  const toggleBookmark = () => {
+  const toggleBookmark = async () => {
     const updatedTabs = tabs.map(tab =>
       tab.id === activeTabId ? { ...tab, isBookmarked: !tab.isBookmarked } : tab
     )
@@ -88,9 +125,24 @@ export default function BrowserInterface() {
 
     const activeTabUpdated = updatedTabs.find(tab => tab.id === activeTabId)!
     if (activeTabUpdated.isBookmarked) {
-      setShortcuts([...shortcuts, { id: activeTabId, title: activeTabUpdated.title, url: activeTabUpdated.url }])
+      const newShortcut = { id: activeTabId, title: activeTabUpdated.title, url: activeTabUpdated.url }
+      setShortcuts([...shortcuts, newShortcut])
+
+      // Save shortcut to database
+      try {
+        await fetch('/api/shortcuts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, shortcut: newShortcut })
+        })
+      } catch (error) {
+        console.error('Error saving shortcut:', error)
+      }
     } else {
       setShortcuts(shortcuts.filter(shortcut => shortcut.id !== activeTabId))
+
+      // Remove shortcut from database
+      // Note: You may want to add an API endpoint to remove shortcuts
     }
   }
 
@@ -107,6 +159,10 @@ export default function BrowserInterface() {
         shortcut.id === id ? { ...shortcut, title: newTitle } : shortcut
       ))
     }
+  }
+
+  if (!userId) {
+    return <AuthPage onAuthenticated={handleAuthenticated} />
   }
 
   return (

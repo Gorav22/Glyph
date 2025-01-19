@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
   try {
-    const result = await model.generateContent(query+ "Give answer in 2000 words.")
+    const result = await model.generateContent(query)
     const response = await result.response
     const text = response.text()
     return NextResponse.json({ result: text })

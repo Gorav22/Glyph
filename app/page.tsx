@@ -47,26 +47,37 @@ export default function BrowserInterface() {
 
   const handleSearch = (query: string) => {
     const searchUrl = `/api/search/google?q=${encodeURIComponent(query)}`
-    handleUrlChange(searchUrl)
+    setTabs(tabs.map(tab => 
+      tab.id === activeTabId ? { ...tab, url: searchUrl, title: `Google: ${query}`, googleSearchQuery: query, lastSearchType: 'google' } : tab
+    ))
   }
 
   const handleAISearch = (query: string) => {
-    const newTab = {
-      id: Date.now().toString(),
-      title: `AI: ${query}`,
-      url: `/api/search/ai?q=${encodeURIComponent(query)}`,
-      splitView: false,
-      isAISearch: true,
-      isBookmarked: false
-    }
-    setTabs([...tabs, newTab])
-    setActiveTabId(newTab.id)
+    const aiSearchUrl = `/api/search/ai?q=${encodeURIComponent(query)}`
+    setTabs(tabs.map(tab => 
+      tab.id === activeTabId ? { ...tab, url: aiSearchUrl, title: `AI: ${query}`, isAISearch: true, aiSearchQuery: query, lastSearchType: 'ai' } : tab
+    ))
   }
 
   const toggleSplitView = () => {
-    setTabs(tabs.map(tab =>
-      tab.id === activeTabId ? { ...tab, splitView: !tab.splitView } : tab
-    ))
+    setTabs(tabs.map(tab => {
+      if (tab.id === activeTabId) {
+        if (!tab.splitView) {
+          // If not in split view, enable it and set up AI and Google searches
+          return { 
+            ...tab, 
+            splitView: true, 
+            aiSearchQuery: tab.aiSearchQuery || tab.title,
+            googleSearchQuery: tab.googleSearchQuery || tab.title,
+            lastSearchType: tab.lastSearchType || 'google'
+          }
+        } else {
+          // If already in split view, disable it
+          return { ...tab, splitView: false }
+        }
+      }
+      return tab
+    }))
   }
 
   const toggleBookmark = () => {
@@ -91,7 +102,6 @@ export default function BrowserInterface() {
     setTabs(tabs.map(tab =>
       tab.id === id ? { ...tab, title: newTitle } : tab
     ))
-    // Update shortcut if the renamed tab is bookmarked
     if (tabs.find(tab => tab.id === id)?.isBookmarked) {
       setShortcuts(shortcuts.map(shortcut =>
         shortcut.id === id ? { ...shortcut, title: newTitle } : shortcut
@@ -100,7 +110,7 @@ export default function BrowserInterface() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar 
         tabs={tabs}
         activeTabId={activeTabId}

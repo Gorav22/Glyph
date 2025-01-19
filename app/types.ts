@@ -5,6 +5,9 @@ export interface Tab {
   splitView: boolean
   isAISearch: boolean
   isBookmarked: boolean
+  googleSearchQuery?: string
+  aiSearchQuery?: string
+  lastSearchType?: 'google' | 'ai'
 }
 
 export interface Shortcut {

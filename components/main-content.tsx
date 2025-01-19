@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, RotateCcw, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, RotateCcw, Star } from 'lucide-react'
 import { Tab } from '../types'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FrameContent } from './frame-content'
-
+import {marked} from 'marked'
 interface MainContentProps {
   activeTab: Tab
   onUrlChange: (url: string) => void
   onSearch: (query: string) => void
   onAISearch: (query: string) => void
-  onReload: () => void
+  onToggleBookmark: () => void
 }
 
-export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onReload }: MainContentProps) {
+export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onToggleBookmark }: MainContentProps) {
   const [inputValue, setInputValue] = useState(activeTab.url)
   const [searchResults, setSearchResults] = useState<any>(null)
   const [aiResult, setAiResult] = useState<string>('')
@@ -24,14 +24,21 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
 
   useEffect(() => {
     if (activeTab.url !== history[currentIndex]) {
-      // Add new URL to history, removing any forward history
       const newHistory = [...history.slice(0, currentIndex + 1), activeTab.url]
       setHistory(newHistory)
       setCurrentIndex(newHistory.length - 1)
     }
     setInputValue(activeTab.url)
     
-    if (activeTab.url.startsWith('/api/search/google')) {
+    if (activeTab.splitView) {
+      if (activeTab.lastSearchType === 'ai') {
+        fetchAIResults(`/api/search/ai?q=${encodeURIComponent(activeTab.aiSearchQuery || '')}`)
+        fetchSearchResults(`/api/search/google?q=${encodeURIComponent(activeTab.googleSearchQuery || '')}`)
+      } else {
+        fetchSearchResults(`/api/search/google?q=${encodeURIComponent(activeTab.googleSearchQuery || '')}`)
+        fetchAIResults(`/api/search/ai?q=${encodeURIComponent(activeTab.aiSearchQuery || '')}`)
+      }
+    } else if (activeTab.url.startsWith('/api/search/google')) {
       fetchSearchResults(activeTab.url)
     } else if (activeTab.url.startsWith('/api/search/ai')) {
       fetchAIResults(activeTab.url)
@@ -39,7 +46,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
       setSearchResults(null)
       setAiResult('')
     }
-  }, [activeTab.url])
+  }, [activeTab])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
@@ -75,7 +82,6 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
   }
 
   const handleRefresh = () => {
-    // Re-fetch current URL
     onUrlChange(activeTab.url)
   }
 
@@ -109,7 +115,8 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
       if (data.error) {
         throw new Error(data.error)
       }
-      setAiResult(data.result)
+      const html=marked.parse(data.result)
+      setAiResult(html)
     } catch (error) {
       console.error('Error fetching AI results:', error)
       setError('An error occurred while fetching AI results. Please try again.')
@@ -122,7 +129,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
     onUrlChange(url)
   }
 
-  const ContentView = ({ url }: { url: string }) => (
+  const ContentView = ({ url, isAIView = false }: { url: string, isAIView?: boolean }) => (
     <div className="flex-1 bg-white overflow-y-auto">
       {loading ? (
         <div className="p-4">Loading...</div>
@@ -132,9 +139,12 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
           <p>{error}</p>
           <p className="mt-4">Please check your internet connection and try again. If the problem persists, there might be an issue with the search service.</p>
         </div>
+      ) : isAIView && aiResult ? (
+        <div className="p-4 prose max-w-none" dangerouslySetInnerHTML={{__html:aiResult}}>
+        </div>
       ) : searchResults ? (
         <div className="p-4">
-          {/* <h2 className="text-2xl font-bold mb-4">Search Results</h2> */}
+          <h2 className="text-2xl font-bold mb-4">Search Results</h2>
           {searchResults.items?.map((item: any, index: number) => (
             <div key={index} className="mb-4">
               <a 
@@ -147,15 +157,10 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
               >
                 {item.title}
               </a>
-              {/* <p className="text-sm text-green-700">{item.displayLink}</p> */}
+              <p className="text-sm text-green-700">{item.displayLink}</p>
               <p className="text-sm mt-1">{item.snippet}</p>
             </div>
           ))}
-        </div>
-      ) : aiResult ? (
-        <div className="p-4 prose max-w-none">
-          <h2 className="text-2xl font-bold mb-4">AI Search Results</h2>
-          {aiResult}
         </div>
       ) : (
         <FrameContent url={url} title={activeTab.title} />
@@ -164,7 +169,7 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
   )
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col h-screen overflow-hidden">
       <div className="h-12 bg-white border-b flex items-center px-4">
         <div className="flex space-x-2 mr-4">
           <Button 
@@ -186,9 +191,9 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={onReload}
+            onClick={handleRefresh}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
         <form onSubmit={handleInputSubmit} className="flex-1 flex">
@@ -199,11 +204,40 @@ export function MainContent({ activeTab, onUrlChange, onSearch, onAISearch, onRe
             placeholder="Search or type a URL (prefix with 'ai:' for AI search)"
             className="flex-1"
           />
+          <Button type="submit" className="ml-2">Go</Button>
         </form>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleBookmark}
+          className="ml-2"
+        >
+          <Star className={`h-4 w-4 ${activeTab.isBookmarked ? 'fill-yellow-400' : ''}`} />
+        </Button>
       </div>
-      <div className={`flex-1 flex ${activeTab.splitView ? 'flex-row' : 'flex-col'}`}>
-        <ContentView url={activeTab.url} />
-        {activeTab.splitView && <ContentView url={activeTab.url} />}
+      <div className="flex-1 flex overflow-hidden">
+        {activeTab.splitView ? (
+          <>
+            <div className="flex-1 overflow-y-auto">
+              <ContentView 
+                url={`/api/search/ai?q=${encodeURIComponent(activeTab.aiSearchQuery || '')}`} 
+                isAIView={true} 
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <ContentView 
+                url={`/api/search/google?q=${encodeURIComponent(activeTab.googleSearchQuery || '')}`} 
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            <ContentView 
+              url={activeTab.url} 
+              isAIView={activeTab.isAISearch || activeTab.lastSearchType === 'ai'}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

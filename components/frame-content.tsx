@@ -35,7 +35,7 @@ export function FrameContent({ url, title }: FrameContentProps) {
     <iframe
       src={url}
       title={title}
-      className="w-full h-full border-none"
+      className="w-full h-[700px] border-none"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
       referrerPolicy="no-referrer"
       onError={handleIframeError}

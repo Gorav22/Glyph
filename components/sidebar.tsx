@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { PlusCircle, Layers, X, Star } from 'lucide-react'
-import { Tab, Shortcut } from "../types"
+import { PlusCircle, Layers, X, Star, LogOut, User } from "lucide-react"
+import type { Tab, Shortcut } from "../types"
 import { TabContextMenu } from "./tab-context-menu"
 
 interface SidebarProps {
@@ -14,18 +14,22 @@ interface SidebarProps {
   onToggleSplitView: () => void
   onShortcutClick: (url: string) => void
   onRenameTab: (id: string, newTitle: string) => void
+  onLogout: () => void
+  onProfileClick: () => void
 }
 
-export function Sidebar({ 
-  tabs, 
-  activeTabId, 
+export function Sidebar({
+  tabs,
+  activeTabId,
   shortcuts,
-  onAddTab, 
-  onCloseTab, 
-  onTabChange, 
+  onAddTab,
+  onCloseTab,
+  onTabChange,
   onToggleSplitView,
   onShortcutClick,
-  onRenameTab
+  onRenameTab,
+  onLogout,
+  onProfileClick,
 }: SidebarProps) {
   return (
     <div className="w-64 bg-gray-800 text-white flex flex-col h-screen">
@@ -36,7 +40,7 @@ export function Sidebar({
       </div>
       <ScrollArea className="flex-grow overflow-y-auto">
         <div className="p-2">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <TabContextMenu
               key={tab.id}
               onRename={(newTitle) => onRenameTab(tab.id, newTitle)}
@@ -44,7 +48,7 @@ export function Sidebar({
             >
               <div
                 className={`flex items-center p-2 cursor-pointer hover:bg-gray-700 rounded-md mb-1 ${
-                  tab.id === activeTabId ? 'bg-gray-700' : ''
+                  tab.id === activeTabId ? "bg-gray-700" : ""
                 }`}
                 onClick={() => onTabChange(tab.id)}
               >
@@ -65,7 +69,7 @@ export function Sidebar({
           {shortcuts.length > 0 && (
             <div className="mt-4">
               <h3 className="px-2 py-1 text-sm font-semibold">Shortcuts</h3>
-              {shortcuts.map(shortcut => (
+              {shortcuts.map((shortcut) => (
                 <div
                   key={shortcut.id}
                   className="flex items-center p-2 cursor-pointer hover:bg-gray-700 rounded-md mb-1"
@@ -82,6 +86,14 @@ export function Sidebar({
       <div className="p-4 border-t border-gray-700">
         <Button onClick={onToggleSplitView} className="w-full">
           <Layers className="mr-2 h-4 w-4" /> Toggle Split View
+        </Button>
+      </div>
+      <div className="mt-auto p-4 border-t border-gray-700">
+        <Button onClick={onProfileClick} className="w-full mb-2">
+          <User className="mr-2 h-4 w-4" /> Profile
+        </Button>
+        <Button onClick={onLogout} className="w-full" variant="destructive">
+          <LogOut className="mr-2 h-4 w-4" /> Logout
         </Button>
       </div>
     </div>

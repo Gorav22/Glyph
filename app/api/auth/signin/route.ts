@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { MongoClient } from 'mongodb'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import { sign } from 'jsonwebtoken'
 
 export async function POST(request: Request) {

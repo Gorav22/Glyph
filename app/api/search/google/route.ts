@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 })
   }
 
-  const apiKey = process.env.GOOGLE_API_KEY
+  const apiKey = process.env.API_KEY
   const cx = process.env.GOOGLE_CSE_ID
 
   if (!apiKey || !cx) {

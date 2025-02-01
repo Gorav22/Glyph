@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { PlusCircle, Layers, X, Star, LogOut, User } from "lucide-react"
+import { PlusCircle, Layers, X, Star, LogOut, User, Home } from "lucide-react"
 import type { Tab, Shortcut } from "../types"
 import { TabContextMenu } from "../../components/tab-context-menu"
+import Link from "next/link"
 
 interface SidebarProps {
   tabs: Tab[]
@@ -89,6 +90,11 @@ export function Sidebar({
         </Button>
       </div>
       <div className="mt-auto p-4 border-t border-gray-700">
+        <Button asChild className="w-full mb-2">
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" /> Home
+          </Link>
+        </Button>
         <Button onClick={onProfileClick} className="w-full mb-2">
           <User className="mr-2 h-4 w-4" /> Profile
         </Button>

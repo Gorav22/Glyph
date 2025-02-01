@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
 
   try {
     const result = await model.generateContent(query+"give answer in 2000 words")

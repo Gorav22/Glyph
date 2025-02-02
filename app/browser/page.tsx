@@ -6,8 +6,6 @@ import { MainContent } from "../../components/main-content"
 import { AuthPage } from "../../components/auth-page"
 import { ProfilePage } from "../../components/profile-page"
 import type { Tab, Shortcut } from "../types"
-import Link from "next/link"
-import { LogOut, User, Home } from "lucide-react"
 
 export default function BrowserInterface() {
   const [userId, setUserId] = useState<string | null>(null)

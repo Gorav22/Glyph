@@ -58,7 +58,7 @@ export function ProfilePage({ userId, onBack }: ProfilePageProps) {
         setError(data.error || "Failed to update password")
       }
     } catch (error) {
-      setError("An unexpected error occurred")
+      setError(`An unexpected error occurred ${error}`)
     }
   }
 
